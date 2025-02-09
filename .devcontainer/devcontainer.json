@@ -1,0 +1,27 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the
+// README at: https://github.com/devcontainers/templates/tree/main/src/go
+{
+  "name": "REST API Tutorial Go",
+  // Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
+  "image": "mcr.microsoft.com/devcontainers/go:1-1-bookworm",
+
+  "forwardPorts": [8080],
+  // Configure tool-specific properties.
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "DavidAnson.vscode-markdownlint",
+        "VisualStudioExptTeam.vscodeintellicode",
+        "aaron-bond.better-comments",
+        "esbenp.prettier-vscode",
+        "golang.go",
+        "rpinski.shebang-snippets",
+        "streetsidesoftware.code-spell-checker",
+        "usernamehw.errorlens",
+        "yzhang.markdown-all-in-one"
+      ]
+    }
+  },
+  // "postCreateCommand": "cd /workspaces/web-service-gin-tut && go mod init web-service-gin-tut"
+  "postCreateCommand": "cd /workspaces/web-service-gin-tut && go get ."
+}
