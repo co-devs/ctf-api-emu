@@ -36,12 +36,7 @@ func main() {
 		title TEXT NOT NULL,
 		artist TEXT NOT NULL,
 		price REAL NOT NULL
-	);
-	INSERT INTO albums (title, artist, price)
-	VALUES
-		("Blue Train", "John Coltrane", 56.99),
-		("Jeru", "Gerry Mulligan", 17.99),
-		("Sarah Vaughan and Clifford Brown", "Sarah Vaughan", 39.99);`
+	);`
 	if _, err = db.Exec(createTable); err != nil {
 		log.Fatal(err)
 	}
