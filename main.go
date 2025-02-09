@@ -31,22 +31,61 @@ func main() {
 	defer db.Close()
 
 	// create the albums table if it doesn't exist
-	createTable := `CREATE TABLE IF NOT EXISTS albums (
+	createAlbumsTable := `CREATE TABLE IF NOT EXISTS albums (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		title TEXT NOT NULL,
 		artist TEXT NOT NULL,
 		price REAL NOT NULL
 	);`
-	if _, err = db.Exec(createTable); err != nil {
+	if _, err = db.Exec(createAlbumsTable); err != nil {
+		log.Fatal(err)
+	}
+
+	// create the api_keys table if it doesn't exist
+	createAPIKeysTable := `CREATE TABLE IF NOT EXISTS api_keys (
+		key TEXT PRIMARY KEY UNIQUE
+	);`
+	if _, err = db.Exec(createAPIKeysTable); err != nil {
 		log.Fatal(err)
 	}
 
 	router := gin.Default()
+	router.Use(apiKeyAuthMiddleware)
+
 	router.GET("/albums", getAlbums)
 	router.GET("/albums/:id", getAlbumByID)
 	router.POST("/albums", postAlbums)
 
 	router.Run("localhost:8080")
+}
+
+// apiKeyAuthMiddleware validates API key from request header
+func apiKeyAuthMiddleware(c *gin.Context) {
+	reqAPIKey := c.GetHeader("X-API-KEY")
+	if !isValidAPIKey(reqAPIKey) {
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "unauthorized: invalid API key"})
+		return
+	}
+	c.Next()
+}
+
+// isValidAPIKey checks if the provided API key exists in the database
+func isValidAPIKey(key string) bool {
+	var exists bool
+	err := db.QueryRow("SELECT EXISTS(SELECT 1 FROM api_keys WHERE key = ?)", key).Scan(&exists)
+	if err != nil {
+		log.Printf("Error checking API key: %v", err)
+		return false
+	}
+	return exists
+}
+
+// insertAPIKey inserts an API key into the api_keys table if it doesn't exist
+func insertAPIKey(key string) {
+	_, err := db.Exec("INSERT OR IGNORE INTO api_keys (key) VALUES (?)", key)
+	if err != nil {
+		log.Fatalf("Error inserting API key: %v", err)
+	}
 }
 
 // getAlbums response with the list of all albums as JSON.
