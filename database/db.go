@@ -38,6 +38,7 @@ func createTables() {
 	if _, err := DB.Exec(createAlbumsTable); err != nil {
 		log.Fatal(err)
 	}
+
 	if _, err := DB.Exec(createAPIKeysTable); err != nil {
 		log.Fatal(err)
 	}
