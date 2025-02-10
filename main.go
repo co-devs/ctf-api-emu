@@ -24,7 +24,7 @@ func main() {
 	router.GET("/albums", handlers.GetAlbums)
 	router.GET("/albums/:id", handlers.GetAlbumByID)
 	router.GET("/secret", middleware.SecretAuthMiddleware, handlers.GetAPIKeys)
-	router.POST("/albums", handlers.PostAlbums)
+	router.POST("/albums", middleware.PostAlbumAuthMiddleware, handlers.PostAlbums)
 
 	router.Run("localhost:8080")
 }

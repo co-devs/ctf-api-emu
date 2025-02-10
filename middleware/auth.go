@@ -29,6 +29,15 @@ func SecretAuthMiddleware(c *gin.Context) {
 	c.Next()
 }
 
+// PostAlbumAuthMiddleware checks if API key has permissions to create albums
+func PostAlbumAuthMiddleware(c *gin.Context) {
+	apiKey, exists := c.Get("apiKey")
+	if !exists || !canCreateAlbum(apiKey.(string)) {
+		c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "forbidden: insufficient permissions"})
+	}
+	c.Next()
+}
+
 // isValidAPIKey checks if the provided API key exists in the database
 func isValidAPIKey(key string) bool {
 	var exists bool
@@ -49,4 +58,15 @@ func canAccessSecret(key string) bool {
 		return false
 	}
 	return canAccess
+}
+
+// canCreateAlbum checks if the API key has permission to create new albums
+func canCreateAlbum (key string) bool {
+	var canCreate bool
+	err := database.DB.QueryRow("SELECT can_add_album FROM api_keys WHERE key = ?", key).Scan(&canCreate)
+	if err != nil {
+		log.Printf("Error checking add album access: %v", err)
+		return false
+	}
+	return canCreate
 }
