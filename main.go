@@ -38,7 +38,7 @@ func main() {
 
 	router.GET("/albums", handlers.GetAlbums)
 	router.GET("/albums/:id", handlers.GetAlbumByID)
-	router.GET("/secret", secretAuthMiddleware, getAPIKeys)
+	router.GET("/secret", secretAuthMiddleware, handlers.GetAPIKeys)
 	router.POST("/albums", handlers.PostAlbums)
 
 	router.Run("localhost:8080")
@@ -85,33 +85,4 @@ func canAccessSecret(key string) bool {
 		return false
 	}
 	return canAccess
-}
-
-// insertAPIKey inserts an API key with permissions into the api_keys table if it doesn't exist
-func insertAPIKey(key string, canAccessSecret bool) {
-	_, err := db.Exec("INSERT OR IGNORE INTO api_keys (key, can_view_secrets) VALUES (?, ?)", key, canAccessSecret)
-	if err != nil {
-		log.Fatalf("Error inserting API key: %v", err)
-	}
-}
-
-// getAPIKeys returns all API keys
-func getAPIKeys(c *gin.Context) {
-	rows, err := db.Query("SELECT key FROM api_keys;")
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-	defer rows.Close()
-
-	var api_keys []string
-	for rows.Next() {
-		var a string
-		if err := rows.Scan(&a); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
-		api_keys = append(api_keys, a)
-	}
-	c.JSON(http.StatusOK, api_keys)
 }
