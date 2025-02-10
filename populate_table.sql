@@ -7,6 +7,9 @@ CREATE TABLE IF NOT EXISTS albums (
     artist TEXT NOT NULL,
     price REAL NOT NULL
 );
+CREATE TABLE IF NOT EXISTS api_keys (
+	key TEXT PRIMARY KEY UNIQUE
+);
 INSERT INTO albums (title, artist, price)
 VALUES
 	("Blue Train", "John Coltrane", 56.99),
