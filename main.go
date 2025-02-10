@@ -5,18 +5,13 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"web-service-gin-tut/models"
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/mattn/go-sqlite3"
 )
 
-// album represents data about a record album
-type album struct {
-	ID     string  `json:"id"`
-	Title  string  `json:"title"`
-	Artist string  `json:"artist"`
-	Price  float64 `json:"price"`
-}
+
 
 var db *sql.DB
 
@@ -124,9 +119,9 @@ func getAlbums(c *gin.Context) {
 	}
 	defer rows.Close()
 
-	var albums []album
+	var albums []models.Album
 	for rows.Next() {
-		var a album
+		var a models.Album
 		if err := rows.Scan(&a.ID, &a.Title, &a.Artist, &a.Price); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
@@ -138,7 +133,7 @@ func getAlbums(c *gin.Context) {
 
 // postAlbums adds an album from JSON received in the request body.
 func postAlbums(c *gin.Context) {
-	var newAlbum album
+	var newAlbum models.Album
 
 	if err := c.BindJSON(&newAlbum); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -166,7 +161,7 @@ func postAlbums(c *gin.Context) {
 func getAlbumByID(c *gin.Context) {
 	id := c.Param("id")
 
-	var a album
+	var a models.Album
 	row := db.QueryRow("SELECT id, title, artist, price FROM albums WHERE id = ?", id)
 	if err := row.Scan(&a.ID, &a.Title, &a.Artist, &a.Price); err != nil {
 		if err == sql.ErrNoRows {
