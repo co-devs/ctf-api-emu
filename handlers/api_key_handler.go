@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 	"web-service-gin-tut/database"
+	"web-service-gin-tut/models"
 
 	"github.com/gin-gonic/gin"
 )
@@ -17,10 +18,10 @@ func GetAPIKeys(c *gin.Context) {
 	}
 	defer rows.Close()
 
-	var api_keys []string
+	var api_keys []models.APIKey
 	for rows.Next() {
-		var a string
-		if err := rows.Scan(&a); err != nil {
+		var a models.APIKey
+		if err := rows.Scan(&a.Key, &a.CanViewAlbum, &a.CanAddAlbum, &a.CanAccessSecret); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
@@ -30,8 +31,8 @@ func GetAPIKeys(c *gin.Context) {
 }
 
 // InsertAPIKey inserts an API key with permissions into the api_keys table if it doesn't exist
-func InsertAPIKey(key string, canAccessSecret bool) {
-	_, err := database.DB.Exec("INSERT OR IGNORE INTO api_keys (key, can_view_secrets) VALUES (?, ?)", key, canAccessSecret)
+func InsertAPIKey(key models.APIKey) {
+	_, err := database.DB.Exec("INSERT OR IGNORE INTO api_keys (key, can_view_secrets, can_add_album, can_view_album) VALUES (?, ?, ?, ?)", key.Key, key.CanAccessSecret, key.CanAddAlbum, key.CanViewAlbum)
 	if err != nil {
 		log.Fatalf("Error inserting API key: %v", err)
 	}

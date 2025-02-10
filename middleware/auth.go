@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 	"web-service-gin-tut/database"
+	"web-service-gin-tut/models"
 
 	"github.com/gin-gonic/gin"
 )
@@ -11,18 +12,19 @@ import (
 // ApiKeyAuthMiddleware validates API key from request header
 func ApiKeyAuthMiddleware(c *gin.Context) {
 	reqAPIKey := c.GetHeader("X-API-KEY")
-	if !isValidAPIKey(reqAPIKey) {
+	apiKey, err := getAPIKey(reqAPIKey)
+	if err != nil || apiKey.Key == "" {
 		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "unauthorized: invalid API key"})
 		return
 	}
-	c.Set("apiKey", reqAPIKey)
+	c.Set("apiKey", apiKey)
 	c.Next()
 }
 
 // SecretAuthMiddleware checks if API key has permission to access the secret endpoint
 func SecretAuthMiddleware(c *gin.Context) {
 	apiKey, exists := c.Get("apiKey")
-	if !exists || !canAccessSecret(apiKey.(string)) {
+	if !exists || !apiKey.(models.APIKey).CanAccessSecret {
 		c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "forbidden: insufficient permissions"})
 		return
 	}
@@ -32,7 +34,16 @@ func SecretAuthMiddleware(c *gin.Context) {
 // PostAlbumAuthMiddleware checks if API key has permissions to create albums
 func PostAlbumAuthMiddleware(c *gin.Context) {
 	apiKey, exists := c.Get("apiKey")
-	if !exists || !canCreateAlbum(apiKey.(string)) {
+	if !exists || !apiKey.(models.APIKey).CanAddAlbum {
+		c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "forbidden: insufficient permissions"})
+	}
+	c.Next()
+}
+
+// ViewAlbumAuthMiddleware checks if the API key has permissions to view albums
+func ViewAlbumAuthMiddleware(c *gin.Context) {
+	apiKey, exists := c.Get("apiKey")
+	if !exists || !apiKey.(models.APIKey).CanViewAlbum {
 		c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "forbidden: insufficient permissions"})
 	}
 	c.Next()
@@ -49,24 +60,13 @@ func isValidAPIKey(key string) bool {
 	return exists
 }
 
-// canAccessSecret checks if the API key has permission to access the secret endpoint
-func canAccessSecret(key string) bool {
-	var canAccess bool
-	err := database.DB.QueryRow("SELECT can_view_secrets FROM api_keys WHERE key = ?", key).Scan(&canAccess)
+// getAPIKey retrieves the API key and its permissions from the database
+func getAPIKey(key string) (models.APIKey, error) {
+	var apiKey models.APIKey
+	err := database.DB.QueryRow("SELECT key, can_view_secrets, can_add_album, can_view_album FROM api_keys WHERE key = ?", key).Scan(&apiKey.Key, &apiKey.CanAccessSecret, &apiKey.CanAddAlbum, &apiKey.CanViewAlbum)
 	if err != nil {
-		log.Printf("Error checking secret access: %v", err)
-		return false
+		log.Printf("Error retrieving API key: %v", err)
+		return apiKey, err
 	}
-	return canAccess
-}
-
-// canCreateAlbum checks if the API key has permission to create new albums
-func canCreateAlbum (key string) bool {
-	var canCreate bool
-	err := database.DB.QueryRow("SELECT can_add_album FROM api_keys WHERE key = ?", key).Scan(&canCreate)
-	if err != nil {
-		log.Printf("Error checking add album access: %v", err)
-		return false
-	}
-	return canCreate
+	return apiKey, nil
 }

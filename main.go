@@ -21,8 +21,8 @@ func main() {
 	router := gin.Default()
 	router.Use(middleware.ApiKeyAuthMiddleware)
 
-	router.GET("/albums", handlers.GetAlbums)
-	router.GET("/albums/:id", handlers.GetAlbumByID)
+	router.GET("/albums", middleware.ViewAlbumAuthMiddleware, handlers.GetAlbums)
+	router.GET("/albums/:id", middleware.ViewAlbumAuthMiddleware, handlers.GetAlbumByID)
 	router.GET("/secret", middleware.SecretAuthMiddleware, handlers.GetAPIKeys)
 	router.POST("/albums", middleware.PostAlbumAuthMiddleware, handlers.PostAlbums)
 
