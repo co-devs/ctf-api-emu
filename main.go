@@ -4,8 +4,8 @@ import (
 	"database/sql"
 	"log"
 	"net/http"
-	"strconv"
-	"web-service-gin-tut/models"
+	"web-service-gin-tut/database"
+	"web-service-gin-tut/handlers"
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/mattn/go-sqlite3"
@@ -17,23 +17,8 @@ var db *sql.DB
 
 func main() {
 	var err error
-	// initialize sqlite database connection
-	db, err = sql.Open("sqlite3", "albums.db")
-	if err != nil {
-		log.Fatal(err)
-	}
+	db = database.InitDB("albums.db")
 	defer db.Close()
-
-	// create the albums table if it doesn't exist
-	createAlbumsTable := `CREATE TABLE IF NOT EXISTS albums (
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		title TEXT NOT NULL,
-		artist TEXT NOT NULL,
-		price REAL NOT NULL
-	);`
-	if _, err = db.Exec(createAlbumsTable); err != nil {
-		log.Fatal(err)
-	}
 
 	// create the api_keys table with permissions if it doesn't exist
 	createAPIKeysTable := `CREATE TABLE IF NOT EXISTS api_keys (
@@ -51,10 +36,10 @@ func main() {
 	router := gin.Default()
 	router.Use(apiKeyAuthMiddleware)
 
-	router.GET("/albums", getAlbums)
-	router.GET("/albums/:id", getAlbumByID)
+	router.GET("/albums", handlers.GetAlbums)
+	router.GET("/albums/:id", handlers.GetAlbumByID)
 	router.GET("/secret", secretAuthMiddleware, getAPIKeys)
-	router.POST("/albums", postAlbums)
+	router.POST("/albums", handlers.PostAlbums)
 
 	router.Run("localhost:8080")
 }
@@ -108,71 +93,6 @@ func insertAPIKey(key string, canAccessSecret bool) {
 	if err != nil {
 		log.Fatalf("Error inserting API key: %v", err)
 	}
-}
-
-// getAlbums response with the list of all albums as JSON.
-func getAlbums(c *gin.Context) {
-	rows, err := db.Query("SELECT id, title, artist, price FROM albums")
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-	defer rows.Close()
-
-	var albums []models.Album
-	for rows.Next() {
-		var a models.Album
-		if err := rows.Scan(&a.ID, &a.Title, &a.Artist, &a.Price); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
-		albums = append(albums, a)
-	}
-	c.JSON(http.StatusOK, albums)
-}
-
-// postAlbums adds an album from JSON received in the request body.
-func postAlbums(c *gin.Context) {
-	var newAlbum models.Album
-
-	if err := c.BindJSON(&newAlbum); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	result, err := db.Exec("INSERT INTO albums (title, artist, price) VALUES (?, ?, ?)", newAlbum.Title, newAlbum.Artist, newAlbum.Price)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	id, err := result.LastInsertId()
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-	newAlbum.ID = strconv.FormatInt(id, 10)
-
-	c.JSON(http.StatusCreated, newAlbum)
-}
-
-// getAlbumByID locates the album whose ID value matches the id
-// parameter sent by the client, then returns that album as a response
-func getAlbumByID(c *gin.Context) {
-	id := c.Param("id")
-
-	var a models.Album
-	row := db.QueryRow("SELECT id, title, artist, price FROM albums WHERE id = ?", id)
-	if err := row.Scan(&a.ID, &a.Title, &a.Artist, &a.Price); err != nil {
-		if err == sql.ErrNoRows {
-			c.JSON(http.StatusNotFound, gin.H{"message": "album not found"})
-		} else {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		}
-		return
-	}
-
-	c.JSON(http.StatusOK, a)
 }
 
 // getAPIKeys returns all API keys
