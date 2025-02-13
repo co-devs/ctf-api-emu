@@ -11,3 +11,5 @@ The service is intended to emulate the Attack / Defend CTF API from the 2025 Wil
 This tool is **not** intended to emulate all functionality of the CTF back end. Flags won't automatically be added to the database, there's no scoring, etc.
 
 For more information about how the database is configured, see [database.md](./database.md). I'm not a database engineer, so please don't judge my work there (though I do welcome feedback).
+
+This project started out following [this tutorial](https://go.dev/doc/tutorial/web-service-gin).
