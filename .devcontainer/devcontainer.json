@@ -23,6 +23,5 @@
       ]
     }
   },
-  // "postCreateCommand": "cd /workspaces/web-service-gin-tut && go mod init web-service-gin-tut"
-  "postCreateCommand": "cd /workspaces/web-service-gin-tut && go get ."
+  "postCreateCommand": "cd /workspaces/ctf-api-emu/src && go get ."
 }
