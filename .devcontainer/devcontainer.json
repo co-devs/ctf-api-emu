@@ -23,5 +23,5 @@
       ]
     }
   },
-  "postCreateCommand": "cd /workspaces/ctf-api-emu/src && go get ."
+  "postCreateCommand": "sudo apt update && sudo apt -y install sqlite3 && cd /workspaces/ctf-api-emu/src && go get . && [ ! -f ./ctf.db ] && touch ./ctf.db && sqlite3 ./ctf.db < ./populate_table.sql"
 }
