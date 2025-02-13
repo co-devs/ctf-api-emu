@@ -11,7 +11,7 @@ import (
 
 // GetAPIKeys returns all API keys
 func GetAPIKeys(c *gin.Context) {
-	rows, err := database.DB.Query("SELECT key FROM api_keys;")
+	rows, err := database.DB.Query("SELECT id, key, is_admin FROM teams;")
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -21,7 +21,7 @@ func GetAPIKeys(c *gin.Context) {
 	var api_keys []models.APIKey
 	for rows.Next() {
 		var a models.APIKey
-		if err := rows.Scan(&a.Key, &a.CanViewAlbum, &a.CanAddAlbum, &a.CanAccessSecret); err != nil {
+		if err := rows.Scan(&a.TeamID, &a.Key, &a.IsAdmin); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
@@ -31,8 +31,8 @@ func GetAPIKeys(c *gin.Context) {
 }
 
 // InsertAPIKey inserts an API key with permissions into the api_keys table if it doesn't exist
-func InsertAPIKey(key models.APIKey) {
-	_, err := database.DB.Exec("INSERT OR IGNORE INTO api_keys (key, can_view_secrets, can_add_album, can_view_album) VALUES (?, ?, ?, ?)", key.Key, key.CanAccessSecret, key.CanAddAlbum, key.CanViewAlbum)
+func InsertAPIKey(name string, key models.APIKey) {
+	_, err := database.DB.Exec("INSERT OR IGNORE INTO api_keys (name, key, is_admin) VALUES (? ,?, ?)", name, key.Key, key.IsAdmin)
 	if err != nil {
 		log.Fatalf("Error inserting API key: %v", err)
 	}

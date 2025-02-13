@@ -15,16 +15,20 @@ import (
 var db *sql.DB
 
 func main() {
-	db = database.InitDB("albums.db")
+	db = database.InitDB("ctf.db")
 	defer db.Close()
 
 	router := gin.Default()
-	router.Use(middleware.ApiKeyAuthMiddleware)
+	// router.Use(middleware.ApiKeyAuthMiddleware)
 
-	router.GET("/albums", middleware.ViewAlbumAuthMiddleware, handlers.GetAlbums)
-	router.GET("/albums/:id", middleware.ViewAlbumAuthMiddleware, handlers.GetAlbumByID)
-	router.GET("/secret", middleware.SecretAuthMiddleware, handlers.GetAPIKeys)
-	router.POST("/albums", middleware.PostAlbumAuthMiddleware, handlers.PostAlbums)
+	router.GET("/heartbeat", handlers.GetHeartbeat)
+	router.GET("/endpoints",middleware.ApiKeyAuthMiddleware, handlers.GetEndpoints)
+	router.GET("/live_flags",middleware.ApiKeyAuthMiddleware, handlers.GetLiveFlags)
+	router.GET("/submissions",middleware.ApiKeyAuthMiddleware, handlers.GetSubmittedFlags)
+	router.POST("/submit",middleware.ApiKeyAuthMiddleware, handlers.PostFlag)
+	router.GET("/status",middleware.ApiKeyAuthMiddleware, handlers.GetStatus)
+	router.GET("/all_submissions", middleware.IsAdminAuthMiddleware, handlers.GetAllFlagSubmissions)
+	router.GET("/secret", middleware.IsAdminAuthMiddleware, handlers.GetAPIKeys)
 
 	router.Run("localhost:8080")
 }
