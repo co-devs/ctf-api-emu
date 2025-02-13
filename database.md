@@ -37,7 +37,7 @@ erDiagram
         TEXT flag_identifier
         TEXT flag
         INTEGER endpoint_id FK
-        INTEGER tick
+        INTEGER tick FK
         TEXT expiration
     }
 
@@ -62,6 +62,7 @@ erDiagram
     flags }|--|| endpoints: "belongs to"
     teams ||--o{ submitted_flags : submits
     flags ||--o{ submitted_flags : "submitted for"
+    flags }o--|| ticks : "has"
     status_checks }o--|| endpoints : has
     status_checks }o--|| ticks : has
 ```

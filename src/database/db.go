@@ -55,7 +55,8 @@ func createTables() {
 		endpoint_id INTEGER NOT NULL,
 		tick INTEGER NOT NULL,
 		expiration TEXT NOT NULL,
-		FOREIGN KEY (endpoint_id) REFERENCES endpoints(id)
+		FOREIGN KEY (endpoint_id) REFERENCES endpoints(id),
+		FOREIGN KEY (tick) REFERENCES ticks(id)
 	);`
 	createSubmittedFlagsTable := `CREATE TABLE IF NOT EXISTS submitted_flags (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
