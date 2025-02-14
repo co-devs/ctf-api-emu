@@ -3,8 +3,9 @@ package middleware
 import (
 	"log"
 	"net/http"
-	"web-service-gin-tut/database"
-	"web-service-gin-tut/models"
+
+	"github.com/co-devs/ctf-api-emu/database"
+	"github.com/co-devs/ctf-api-emu/models"
 
 	"github.com/gin-gonic/gin"
 )

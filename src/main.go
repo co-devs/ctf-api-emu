@@ -2,9 +2,10 @@ package main
 
 import (
 	"database/sql"
-	"web-service-gin-tut/database"
-	"web-service-gin-tut/handlers"
-	"web-service-gin-tut/middleware"
+
+	"github.com/co-devs/ctf-api-emu/database"
+	"github.com/co-devs/ctf-api-emu/handlers"
+	"github.com/co-devs/ctf-api-emu/middleware"
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/mattn/go-sqlite3"

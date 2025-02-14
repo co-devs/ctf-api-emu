@@ -1,4 +1,4 @@
-module web-service-gin-tut
+module github.com/co-devs/ctf-api-emu
 
 go 1.23.4
 
