@@ -25,10 +25,13 @@ func ApiKeyAuthMiddleware(c *gin.Context) {
 
 // IsAdminAuthMiddleware checks if the API key is an admin key
 func IsAdminAuthMiddleware(c *gin.Context) {
-	apiKey, exists := c.Get("apiKey")
-	if !exists || !apiKey.(models.APIKey).IsAdmin {
+	reqAPIKey := c.GetHeader("team-token")
+	// log.Printf("API key: %v", reqAPIKey)
+	apiKey, err := getAPIKey(reqAPIKey)
+	if err != nil || !apiKey.IsAdmin {
 		c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "forbidden: insufficient permissions"})
 	}
+	c.Set("apiKey", apiKey)
 	c.Next()
 }
 
@@ -48,7 +51,7 @@ func getAPIKey(key string) (models.APIKey, error) {
 	var apiKey models.APIKey
 	// log.Printf("Query: SELECT id, key FROM teams WHERE key = '%v'", apiKey.Key)
 	err := database.DB.QueryRow("SELECT id, key, is_admin FROM teams WHERE key = ?", key).Scan(&apiKey.TeamID, &apiKey.Key, &apiKey.IsAdmin)
-	// log.Printf("Resulting apiKey.TeamID %v, apiKey.Key %v", apiKey.TeamID, apiKey.Key)
+	log.Printf("Resulting apiKey.TeamID %v, apiKey.Key %v, apiKey.IsAdmin %v", apiKey.TeamID, apiKey.Key, apiKey.IsAdmin)
 	if err != nil {
 		log.Printf("Error retrieving API key: %v", err)
 		return apiKey, err
